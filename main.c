@@ -3,128 +3,48 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sel-khao <sel-khao <marvin@42.fr>>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/05/19 22:13:04 by sara              #+#    #+#             */
-/*   Updated: 2025/05/19 23:07:58 by sara             ###   ########.fr       */
+/*   Created: 2025/05/20 07:47:10 by sel-khao          #+#    #+#             */
+/*   Updated: 2025/05/20 10:37:41 by sel-khao         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+# include "minishell.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include "minishell.h"
 
-int validate_redirection(char *input)
+void free_all(t_shell *shell)
 {
-    int i;
-    int c = 0;
-    
-    i = 0;
-    if (input[0] == '<' || input[0] == '>')
-        return (1);
-    while (input[i])
+    if (shell->input)
     {
-        c = 0;
-        while (input[i] == '<' || input[i] == '>')
-        {
-            c++;
-            if (c > 2)
-                return 1;
-            i++;
-        }
-        if ((input[i] == '<' && input[i + 1] == '>') ||
-            (input[i] == '>' && input[i + 1] == '<'))
-           return (1);
-        if ((input[i] == '<' || input[i] == '>') && input[i + 1] == '\0')
-            return (1);
-        i++;
+        free(shell->input);
+        shell->input = NULL;
     }
-    return 0;
-}
-
-int validate_quote(char *str)
-{//am i inside or outisde quotes?
-    int i = 0;
-    int d = 0;//outside it
-    int s = 0;
-
-    while (str[i])
-    {
-        if (str[i] == '\\' && (str[i + 1] == '\'' || str[i + 1] == '"'))
-            i++;
-        else
-        {
-            if (str[i] == '\'' && d == 0)//
-                s = !s;//alterna s tra 1 e 0, on and off, in and out
-            else if (str[i] == '"' && s == 0)
-                d = !d;
-        }
-        i++;
-    }
-    if (s == 1 || d == 1)
-        return (1);//unclosed quotes
-    return (0);//success
-}
-
-int validate_pipe(char *input)
-{
-    int s = 0;
-    int d = 0;
-
-    if (*input == '|')
-        return (1);
-    while (*input)
-    {
-        if (*input == '\'' && d == 0)
-            s = !s;
-        else if (*input == '"' && s == 0)
-            d = !d;
-        if (*input == '|' && s == 0 && d == 0)
-        {
-            input++;
-            while (*input == ' ')
-                input++;
-            if (*input == '\0' || *input == '|')
-                return 1;
-        }
-        else
-            input++;
-    }
-    return 0;
+    clear_history();
 }
 
 void ft_readline(t_shell *shell)
 {
-    shell->input = readline("mininshell>");
+    shell->input = readline("mininshell> ");
     if (!shell->input)
+    {
+        free_all(shell);
         exit(0);
+    }
     if (shell->input[0])
         add_history(shell->input);
-}
-
-int validate_input(char *input)
-{
-    if (!input || !input[0])
-        return (1);//error
-    while (*input == ' ')
-        input++;
-    if (quote(input) == 1)
-        return (1);
-    if (validate_pipe(input) == 1)
-        return (1);
-    if (validate_redirections(input) == 1)
-        return (1);
-    return (0);
 }
 
 void tokenize(t_shell *shell)
 {
     if (validate_input(shell->input))
+    {
+        printf("Invalid input: %s\n", shell->input);
         return ;
-    
+    }
+    printf("Valid input: %s\n", shell->input);
 }
+
 
 int main(int ac, char **av)
 {
@@ -138,6 +58,8 @@ int main(int ac, char **av)
     while (1)
     {
         ft_readline(&shell);
+        if (!shell.input)
+            free_all(&shell);
         tokenize(&shell);
         free(shell.input);
         shell.input = NULL;
