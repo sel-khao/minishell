@@ -40,7 +40,7 @@ typedef struct s_token//for parsial strings
     int                type; 
     struct s_token    *next;
 } t_token;
-
+è-
 typedef struct s_shell
 {
     char     *input;
