@@ -8,6 +8,18 @@ Whitespace trimming between tokens
 
 Syntax errors (like unclosed quotes)
 
+_________________________________________________________
+errors:
+
+';; test'
+
+'echo "hello"' is invalid because double quotes
+cannot be nested inside single quotes
+_________________________________________________________
+valid:
+
+
+_________________________________________________________
 
 
 1	echo hello world	["echo", "hello", "world"]

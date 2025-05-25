@@ -1,11 +1,12 @@
 CC = cc
-CFLAGS = -Wall -Wextra -Werror -g
+CFLAGS = -Wall -Wextra -Werror -g 
 
 NAME = minishell
 
 SRC = main.c\
 		validate.c\
-		
+		free.c\
+		utils.c\
 
 OBJ = $(SRC:.c=.o)
 

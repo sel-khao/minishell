@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ft_lstadd_back.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sel-khao <sel-khao <marvin@42.fr>>         +#+  +:+       +#+        */
+/*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/09 16:53:52 by sel-khao          #+#    #+#             */
-/*   Updated: 2024/12/14 17:47:50 by sel-khao         ###   ########.fr       */
+/*   Updated: 2025/05/24 17:53:52 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,16 +16,16 @@ void	ft_lstadd_back(t_list **lst, t_list *new)
 {
 	t_list	*ptr;
 
-	ptr = *lst;//x attraversare la lista
-	if (new == NULL)//node is null, nothing to add
+	ptr = *lst;
+	if (new == NULL)
 		return ;
-	if (*lst == NULL)//list is empty, so head is null
+	if (*lst == NULL)
 	{
-		*lst = new;//head must point to new node
+		*lst = new;
 		return ;
 	}
-	ptr = ft_lstlast(*lst);//if list nt empty, find the last: next == null
-	ptr->next = new;//then add it last
+	ptr = ft_lstlast(*lst);
+	ptr->next = new;
 }
 /* int main(void)
 {

@@ -14,6 +14,7 @@ SRC = ft_atoi.c \
 		ft_strlen.c \
 		ft_calloc.c \
 		ft_substr.c \
+		ft_strcmp.c \
 		ft_memmove.c \
 		ft_strlcat.c \
 		ft_strlcpy.c \

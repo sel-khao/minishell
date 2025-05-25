@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   validate.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sel-khao <sel-khao <marvin@42.fr>>         +#+  +:+       +#+        */
+/*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/20 09:33:34 by sel-khao          #+#    #+#             */
-/*   Updated: 2025/05/20 11:54:04 by sel-khao         ###   ########.fr       */
+/*   Updated: 2025/05/24 16:15:25 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,41 +29,48 @@ int validate_input(char *input)
 
 int	validate_redirection(char *input)
 {
-	int	i;
-
-	i = 0;
-	while (input[i])
+	while (*input)
 	{
-		if (input[i] == '\'' || input[i]  == '"')
+		if (*input == '\'' || *input  == '"')
 		{
-			i++;
-			while (input[i] && input[i] != '\'' && input[i] != '"')
-				i++;
-			if (input[i])
-				i++;
+			input++;
+			while (*input && *input != '\'' && *input != '"')
+				input++;
+			if (*input)
+				input++;
 		}
-		else if (input[i] == '<' || input[i] == '>')
+		else if (*input == '<' || *input == '>')
 		{
-			mult_redir(input, i);
-			i++;
-			while (input[i] == ' ')
-				i++;
-			if (!input[i] || input[i] == '<' || input[i] == '>')
+			if (mult_redir(input))
+                return (1);
+            while (*input == '<' || *input == '>')
+				input++;
+            while (*input == ' ')
+                input++;
+			if (!*input || *input == '<' || *input == '>')
 				return 1;
 		}
-		i++;
+		input++;
 	}
 	return 0;
 }
 
-int	mult_redir(char *input, int i)
+int	mult_redir(char *input)
 {
 	int c;
-	
+    char a;
+    
 	c = 1;
-	if (input[i + 1] == input[i])
+	a = *input;
+	if (*(input + 1) != a && (*(input + 1) == '<' || *(input + 1) == '>'))
+		return 1;
+    while (*(input + c) == a)
 		c++;
-	return (c);
+    if (c > 2)
+    {
+        return (1);
+    }
+	return (0);
 }
 
 int	validate_quote(char *str)

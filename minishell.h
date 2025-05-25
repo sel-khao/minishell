@@ -3,23 +3,26 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sel-khao <sel-khao <marvin@42.fr>>         +#+  +:+       +#+        */
+/*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/20 07:47:00 by sel-khao          #+#    #+#             */
-/*   Updated: 2025/05/20 09:21:11 by sel-khao         ###   ########.fr       */
+/*   Updated: 2025/05/25 20:09:02 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef MINISHELL_H
 # define MINISHELL_H
 
-# define TOK_CMD        1   //
-# define TOK_ARG        2   // "-l", "/home/user"
-# define TOK_REDIRECT    3  // Redirect operator ">", "<", ">>"
-# define TOK_PIPE        4   //  "|"
-# define TOK_HEREDOC    5   // "<<"
-# define DOLLAR
-# define SPACES
+# define WORD       1
+# define EOF        2
+# define REDIRECT   3
+# define PIPE       4
+# define HEREDOC    5
+# define DOLLAR		6
+# define SEMICOLON	7
+# define QUOTE		8
+# define BG			9
+# define VAR		10
 
 # include <stdio.h>        // printf, perror
 # include <stdlib.h>       // malloc, free, exit, getenv
@@ -35,8 +38,8 @@
 # include <termcap.h>      // tgetent, tgetflag, tgetnum, tgetstr, tgoto, tputs
 # include <curses.h>       // May be needed for termcap on some systems
 # include <sys/ioctl.h>    // ioctl
-#include <readline/readline.h>
-#include <readline/history.h>
+# include <readline/readline.h>
+# include <readline/history.h>
 
 typedef struct s_cmd
 {
@@ -49,7 +52,7 @@ typedef struct s_cmd
 	struct s_cmd	*next; 
 }	t_cmd;
 
-typedef struct s_token//for parsial strings
+typedef struct s_token
 {
 	char			*value; 
 	int				type; 
@@ -63,14 +66,26 @@ typedef struct s_shell
 	t_cmd	*cmds;
 }	t_shell;
 
-void	free_all(t_shell *shell);
+int		is_space(char c);
+int		is_special(char c);
+int		mult_redir(char *input);
 int		validate_quote(char *str);
 int		validate_pipe(char *input);
 int		validate_input(char *input);
 int		validate_redirection(char *input);
 int		validate_redirection(char *input);
 
-void	tokenize(t_shell *shell);
+void free_cmds(t_cmd *cmds);
+void free_tokens(t_token *tokens);
+void	check_type(t_token **tmp, t_cmd *cmd);
+void	init(t_cmd *cmd);
+void	create_token(t_shell *shell, char *input, int *i);
+void	tok_cmd(t_shell *shell);
+char	**add_word(char **argv, char *word);
+void	free_all(t_shell *shell);
+void	something(t_shell *shell);
 void	ft_readline(t_shell *shell);
+void    tokenadd_back(t_token **lst, t_token *new);
+void	add_token(t_shell *shell, char *value, int type);
 
 #endif

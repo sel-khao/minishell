@@ -1,39 +1,56 @@
-
 #include "minishell.h"
+
+int is_space(char c)
+{
+    if (c == ' ' || c == '\t' || c == '\b' || c == '\n' || c == '\v') 
+        return (1);
+    return (0);
+}
+
+int is_special(char c)
+{
+    if (c == '<' || c == '>' || c == ';' || c == '|' ||
+        c == '&' || c == '$' || c == '\'' || c == '\"')
+        return (1);
+    return (0);
+}
+
+void    tokenadd_back(t_token **lst, t_token *new)
+{
+    t_token *ptr;
+
+    if (!new)
+        return;
+    if (!*lst)
+    {
+        *lst = new;
+        return;
+    }
+    ptr = *lst;
+    while (ptr->next)
+        ptr = ptr->next;
+    ptr->next = new;
+}
 
 void ft_readline(t_shell *shell)
 {
-    shell->input = readline("mininshell>");
+    shell->input = readline("mininshell> ");
     if (!shell->input)
+    {
+        free_all(shell);
         exit(0);
+    }
     if (shell->input[0])
         add_history(shell->input);
 }
 
+void init(t_cmd *cmd)
 {
-    int s = 0;
-    int d = 0; // single and double quote flags
-
-    while (*input == ' ')
-        input++;
-    if (*input == '|')
-        return (1);
-    while (*input)
-    {
-        if (*input == '\'' && d == 0)
-            s = !s;
-        else if (*input == '"' && s == 0)
-            d = !d;
-        if (*input == '|' && s == 0 && d == 0)
-        {
-            input++;
-            while (*input == ' ')
-                input++;
-            if (*input == '\0' || *input == '|')
-                return 1;
-        }
-        else
-            input++;
-    }
-    return 0;
+    cmd->append = 0;
+    cmd->heredoc = 0;
+    cmd->argv = NULL;
+    cmd->infile = NULL;
+    cmd->outfile = NULL;
+    cmd->delim = NULL;
+    cmd->next = NULL;
 }

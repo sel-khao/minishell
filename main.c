@@ -3,46 +3,90 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sel-khao <sel-khao <marvin@42.fr>>         +#+  +:+       +#+        */
+/*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/20 07:47:10 by sel-khao          #+#    #+#             */
-/*   Updated: 2025/05/20 10:37:41 by sel-khao         ###   ########.fr       */
+/*   Updated: 2025/05/25 20:07:06 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "minishell.h"
 
-
-void free_all(t_shell *shell)
+char **add_word(char **argv, char *word)
 {
-    if (shell->input)
+    int i = 0;
+    int j = 0;
+    char **av;
+    
+    while (argv && argv[i])
+        i++;
+    av = malloc(sizeof(char *) * (i + 2));
+    if (!av)
+        return NULL;
+    while (j < i)
     {
-        free(shell->input);
-        shell->input = NULL;
+        av[j] = argv[j];
+        j++;
     }
-    clear_history();
+    av[i] = ft_strdup(word);
+    av[i + 1] = NULL;
+    free(argv);
+    return (av);
 }
 
-void ft_readline(t_shell *shell)
+void tok_cmd(t_shell *shell)
 {
-    shell->input = readline("mininshell> ");
-    if (!shell->input)
-    {
-        free_all(shell);
-        exit(0);
-    }
-    if (shell->input[0])
-        add_history(shell->input);
+    t_cmd *cmd;
+    t_token *tmp;
+
+    tmp = shell->tokens;
+    cmd = malloc(sizeof(t_cmd));
+    if (!cmd)
+        return ;
+    init(cmd);
+    shell->cmds = cmd;
+    while (tmp)
+        check_type(&tmp, cmd);
 }
 
-void tokenize(t_shell *shell)
+void check_type(t_token **tmp, t_cmd *cmd)
+{
+    if ((*tmp)->type == WORD || (*tmp)->type == EOF)
+    {
+        cmd->argv = add_word(cmd->argv, (*tmp)->value);
+        *tmp = (*tmp)->next;
+    }
+    else if ((*tmp)->type == REDIRECT && (*tmp)->next)
+    {
+        if (ft_strcmp((*tmp)->value, "<") == 0)
+            cmd->infile = ft_strdup((*tmp)->next->value);
+        else if (ft_strcmp((*tmp)->value, ">") == 0)
+            cmd->outfile = ft_strdup((*tmp)->next->value);
+        else if (ft_strcmp((*tmp)->value, ">>") == 0)
+        {
+            cmd->outfile = ft_strdup((*tmp)->next->value);
+            cmd->append = 1;
+        }
+        *tmp = (*tmp)->next->next;
+    }
+    else if ((*tmp)->type == HEREDOC && (*tmp)->next)
+    {
+        cmd->delim = ft_strdup((*tmp)->next->value);
+        cmd->heredoc = 1;
+        *tmp = (*tmp)->next->next;
+    }
+}
+
+void something(t_shell *shell)
 {
     if (validate_input(shell->input))
     {
         printf("Invalid input: %s\n", shell->input);
         return ;
     }
-    printf("Valid input: %s\n", shell->input);
+    tokenize(shell);
+    tok_cmd(shell);
+    printf("Parsed commands from input: %s\n", shell->input);
 }
 
 
@@ -60,7 +104,9 @@ int main(int ac, char **av)
         ft_readline(&shell);
         if (!shell.input)
             free_all(&shell);
-        tokenize(&shell);
+        something(&shell);
+        shell.tokens = NULL;
+        shell.cmds = NULL;
         free(shell.input);
         shell.input = NULL;
     }
