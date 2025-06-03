@@ -53,7 +53,7 @@ char	**ft_split(char const *s, char c);
 int		ft_printf(const char *format, ...);
 void	*ft_memset(void *s, int c, size_t n);
 void	*ft_calloc(size_t nmemb, size_t size);
-int ft_strcmp(const char *s1, const char *s2);
+int		ft_strcmp(const char *s1, const char *s2);
 void	ft_lstadd_back(t_list **lst, t_list *new);
 void	ft_lstadd_front(t_list **lst, t_list *new);
 void	ft_lstadd_front(t_list **lst, t_list *new);
