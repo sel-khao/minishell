@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sel-khao <sel-khao@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/20 07:47:10 by sel-khao          #+#    #+#             */
-/*   Updated: 2025/06/23 13:09:06 by sel-khao         ###   ########.fr       */
+/*   Updated: 2025/07/07 15:27:16 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-# include "../include/minishell.h"
+#include "../include/minishell.h"
 
 void	print_header(void)
 {
@@ -29,10 +29,12 @@ void	print_header(void)
 
 char	**add_word(char **argv, char *word)
 {
-	int i = 0;
-	int j = 0;
-	char **av;
+	int		i;
+	int		j;
+	char	**av;
 
+	i = 0;
+	j = 0;
 	if (argv)
 	{
 		while (argv[i])
@@ -40,8 +42,8 @@ char	**add_word(char **argv, char *word)
 	}
 	av = malloc(sizeof(char *) * (i + 2));
 	if (!av)
-		return NULL;
-  	while (j < i)
+		return (NULL);
+	while (j < i)
 	{
 		av[j] = argv[j];
 		j++;
@@ -52,71 +54,133 @@ char	**add_word(char **argv, char *word)
 	return (av);
 }
 
-void tok_cmd(t_shell *shell)
+void	parsing(t_shell *shell, char **envp)
 {
-	t_cmd *cmd;
-	t_token *tmp;
-	t_token *prev;
+	int		i;
+	t_token	*token;
+	t_cmd	*cmd;
 
-	tmp = shell->tokens;
-	cmd = malloc(sizeof(t_cmd));
-	if (!cmd)
-		return ;
-	init(cmd);
-	shell->cmds = cmd;
-	while (tmp)
+	if (validate_input(shell->input))
 	{
-		prev = tmp;
-		if (tmp->type == PIPE)
-			check_type2(&tmp, &cmd);
-		else
-			check_type(&tmp, cmd, shell);
-		if (tmp == prev)
-			tmp = tmp->next;
+		printf("Invalid input: %s\n", shell->input);
+		return ;
+	}
+	tokenize(shell);
+	printf("Tokens:\n");
+	token = shell->tokens;
+	while (token)
+	{
+		printf("Token: '%s', Type: %d, Quote: %c\n", token->value, token->type, token->quote);
+		printf("  type: %d, value: '%s'\n", token->type, token->value);
+		token = token->next;
+	}
+	tok_cmd(shell, envp);
+	cmd = shell->cmds;
+	while (cmd)
+	{
+		printf("Command:\n");
+		i = 0;
+		while (cmd->argv && cmd->argv[i])
+		{
+			printf("argv[%d]: %s\n", i, cmd->argv[i]);
+			i++;
+		}
+		cmd = cmd->next;
 	}
 }
 
-void parsing(t_shell *shell)
+/*void	parsing(t_shell *shell, char **envp)
 {
-    if (validate_input(shell->input))
-    {
-        printf("Invalid input: %s\n", shell->input);
-        return;
-    }
-    tokenize(shell);
-    tok_cmd(shell);
+	if (validate_input(shell->input))
+	{
+		printf("bash: syntax error near unexpected token '%s'\n", shell->input);
+		return ;
+	}
+	tokenize(shell);
+	tok_cmd(shell, envp);
+}*/
+
+int	heredoc_pipe(const char *delimiter, char** envp)
+{
+	int		pipefd[2];
+	char	*line;
+	char	*expand;
+
+	if (pipe(pipefd) == -1)
+	{
+		perror("pipe");
+		return (-1);
+	}
+	signal(SIGINT, SIG_IGN);
+	while (1)
+	{
+		line = readline("> ");
+		if (!line || ft_strcmp(line, delimiter) == 0)
+		{
+			free(line);
+			break ;
+		}
+		expand = expand_var(line, envp);
+		if (!expand)
+		{
+			free(line);
+			close(pipefd[1]);
+			return (-1);
+		}
+		write(pipefd[1], expand, ft_strlen(expand));
+		write(pipefd[1], "\n", 1);
+		free(line);
+		free(expand);
+	}
+	close(pipefd[1]);
+	return (pipefd[0]);
 }
 
-int main(int ac, char **av, char **envp)
+int	main(int ac, char **av, char **envp)
 {
-    t_shell shell;
-    char	**str;
+	t_shell	shell;
+	char	**str;
 
 	if (ac != 1)
 	{
 		printf("Usage: %s\n", av[0]);
 		return (1);
 	}
-    shell.tokens = NULL;
-    shell.input = NULL;
-    shell.cmds = NULL;
-    str = dup_env(envp);
+	shell.tokens = NULL;
+	shell.input = NULL;
+	shell.cmds = NULL;
+	str = dup_env(envp);
 	start_signals();
 	print_header();
-    while (1)
-    {
-        ft_readline(&shell);
-        if (!shell.input)
-            free_all(&shell);
-        parsing(&shell);
-        if (shell.cmds && shell.cmds->argv)
-	        str = execute(&shell, shell.cmds->argv, str);
-        else
-	        ft_putendl_fd("No command to execute", STDERR_FILENO);
-        shell.tokens = NULL;
-        shell.cmds = NULL;
-        free(shell.input);
-        shell.input = NULL;
-    }
-    return 0;
+	while (1)
+	{
+		ft_readline(&shell);
+		if (!shell.input)
+		{
+			printf("exitop\n");
+    		free_all(&shell);
+    		free_arr(str, NULL);
+			str = NULL;
+    		break ;
+		}
+		parsing(&shell, str);
+		if (!shell.cmds || !shell.cmds->argv || !shell.cmds->argv[0])
+    	{
+        	free_all(&shell);
+    	    shell.input = NULL;
+    	}
+		else
+		{
+			if (shell.cmds && shell.cmds->argv && shell.cmds->next)
+				pipex(&shell, str);
+			else
+				str = execute(&shell, shell.cmds->argv, str);
+			free_all(&shell);
+			shell.input = NULL;
+		}
+	}
+	free_all(&shell);
+	free_arr(str, NULL);
+	str = NULL;
+	return (0);
 }

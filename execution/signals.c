@@ -3,15 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   signals.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sel-khao <sel-khao@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 11:25:53 by kbossio           #+#    #+#             */
-/*   Updated: 2025/06/16 09:16:57 by sel-khao         ###   ########.fr       */
+/*   Updated: 2025/07/06 08:02:29 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
-
+//6
 int	g_status = 0;
 
 void	signal_handler(int sig)
@@ -24,16 +24,12 @@ void	signal_handler(int sig)
 		rl_replace_line("", 0);
 		rl_redisplay();
 	}
-	else if (sig == SIGQUIT)
-	{
-		g_status = 131;
-	}
 }
 
 void	start_signals(void)
 {
 	signal(SIGINT, signal_handler);
-	signal(SIGQUIT, signal_handler);
+	signal(SIGQUIT, SIG_IGN);
 }
 
 static char	**get_path_dirs(char *envp[])
@@ -55,17 +51,33 @@ static char	*find_executable(char *cmd, char *envp[])
 	char	*tmp;
 	int		i;
 
+	if (!cmd || !*cmd)
+		return NULL;
+	if (cmd[0] == '/' || (cmd[0] == '.' && cmd[1] == '/'))
+	{
+		if (access(cmd, F_OK) == 0)
+			return (ft_strdup(cmd));
+		else
+			return (NULL);
+	}
 	dirs = get_path_dirs(envp);
 	if (!dirs)
 		return (NULL);
+	full_path = NULL;
 	i = 0;
 	while (dirs[i])
 	{
 		tmp = ft_strjoin(dirs[i], "/");
 		full_path = ft_strjoin(tmp, cmd);
 		free(tmp);
-		if (access(full_path, X_OK) == 0)
+		if (access(full_path, F_OK) == 0)
+		{
+			if (access(full_path, X_OK) == 0)
+				break ;
+			free(full_path);
+			full_path = NULL;
 			break ;
+		}
 		free(full_path);
 		full_path = NULL;
 		i++;
@@ -73,33 +85,91 @@ static char	*find_executable(char *cmd, char *envp[])
 	i = 0;
 	while (dirs[i])
 		free(dirs[i++]);
-	free(dirs);
-	return (full_path);
+	return (free(dirs), full_path);
 }
 
-int	exec_external(char **args, char **envp)
+int	exec_external(t_cmd *cmd, char **args, char **envp)
 {
 	pid_t	pid;
 	int		status;
 	char	*exe_path;
 
+	if (!args[0] || args[0][0] == '\0')
+	{
+        ft_putendl_fd("bash: : command not found", STDERR_FILENO);
+        g_status = 127;
+        return (127);
+    }
 	exe_path = find_executable(args[0], envp);
 	if (!exe_path)
 	{
-		ft_putstr_fd(args[0], STDERR_FILENO);
-		ft_putendl_fd(": command not found", STDERR_FILENO);
+		if (ft_strchr(args[0], '/'))
+		{
+			ft_putstr_fd("bash: ", STDERR_FILENO);
+            ft_putstr_fd(args[0], STDERR_FILENO);
+            ft_putendl_fd(": No such file or directory", STDERR_FILENO);
+		}
+		else
+		{
+			ft_putstr_fd("bash: ", STDERR_FILENO);
+			ft_putstr_fd(args[0], STDERR_FILENO);
+			ft_putendl_fd(": command not found", STDERR_FILENO);
+		}
+		g_status = 127;
 		return (127);
+	}
+	if (access(exe_path, X_OK) != 0)
+	{
+		ft_putstr_fd(args[0], STDERR_FILENO);
+		ft_putendl_fd(": permission denied", STDERR_FILENO);
+		free(exe_path);
+		g_status = 126;
+		return (126);
 	}
 	pid = fork();
 	if (pid < 0)
 		return (perror("fork"), free(exe_path), 1);
 	if (pid == 0)
 	{
+		signal(SIGINT, SIG_DFL);
+		signal(SIGQUIT, SIG_DFL);
+		if (cmd->redir && cmd->redir->type == HEREDOC)
+			handle_heredoc(cmd->redir->filename, envp);
 		execve(exe_path, args, envp);
-		return (perror("execve"), free(exe_path), 1);
+		perror("execve");
+		exit(1);
 	}
-	while (waitpid(pid, &status, 0) == -1)
-		;
+	else
+	{
+		while (waitpid(pid, &status, 0) == -1)
+			;
+		if (WIFEXITED(status))
+			g_status = WEXITSTATUS(status);
+		else if (WIFSIGNALED(status))
+			g_status = 128 + WTERMSIG(status);
+	}
 	free(exe_path);
 	return (0);
 }
+
+void handle_heredoc(char *delimiter, char **envp)
+{
+    int hdoc_fd;
+
+    hdoc_fd = heredoc_pipe(delimiter, envp);
+    if (hdoc_fd < 0)
+    {
+        perror("heredoc pipe error");
+        exit(1);
+    }
+    dup2(hdoc_fd, STDIN_FILENO);
+    close(hdoc_fd);
+}
+
+/*
+X_OK = controllo permesso di esecuzione
+
+R_OK = controllo permesso di lettura
+
+W_OK = controllo permesso di scrittura
+*/

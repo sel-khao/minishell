@@ -6,18 +6,18 @@
 /*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 10:47:51 by kbossio           #+#    #+#             */
-/*   Updated: 2025/06/18 13:34:36 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/07 15:15:56 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
 
-static int	connect(t_shell *shell, char **cmds, char **envp, int pipe_fd[2])
+static int	connect(t_shell *shell, char **envp, int pipe_fd[2])
 {
-	static int	prev_fd = STDIN_FILENO;
+	static int	prev_fd;
 	pid_t		pid;
-	int i = 0;
 
+	prev_fd = STDIN_FILENO;
 	pid = fork();
 	if (pid == -1)
 		return (perror("fork"), -1);
@@ -28,42 +28,71 @@ static int	connect(t_shell *shell, char **cmds, char **envp, int pipe_fd[2])
 			dup2(prev_fd, STDIN_FILENO);
 			close(prev_fd);
 		}
-		if (cmds[i + 1])
+		if (shell->cmds->next)
 			dup2(pipe_fd[1], STDOUT_FILENO);
 		close(pipe_fd[0]);
 		close(pipe_fd[1]);
-		execute(shell, cmds, envp);
+		execute(shell, shell->cmds->argv, envp);
 		exit(1);
 	}
-	if (cmds[i + 1])
+	if (shell->cmds->next)
 		close(pipe_fd[1]);
 	if (prev_fd != STDIN_FILENO)
 		close(prev_fd);
 	prev_fd = pipe_fd[0];
-	if (!cmds[i + 1])
+	if (!shell->cmds->next)
 		prev_fd = STDIN_FILENO;
 	return (0);
 }
+int	pipex(t_shell *shell, char **envp)
+{
+	int		n;
+	int		pipe_fd[2];
+	t_cmd	*tmp;
+	
+	tmp = shell->cmds;
+	n = 0;
+	while (shell->cmds)
+	{
+		if (shell->cmds)
+			if (pipe(pipe_fd) == -1)
+				return (perror("pipe"), 1);
+		if (connect(shell, envp, pipe_fd) == -1)
+			return (1);
+		shell->cmds = shell->cmds->next;
+		n++;
+	}
+	while (n-- > 0)
+		wait(NULL);
+	shell->cmds = tmp;
+	return (0);
+}
 
-int	pipex(t_shell *shell, char **cmds, char **envp)
+/*
+int	pipex(t_shell *shell, char **envp)
 {
 	int		i;
 	int		n;
 	int		pipe_fd[2];
-	char	*old;
+	t_cmd	*tmp;
 
+	tmp = shell->cmds;
 	n = 0;
-	while (cmds[n])
+	while (tmp)
 	{
-		old = cmds[n];
-		cmds[n] = ft_strtrim(old, " \t\n");
-		free(old);
 		n++;
+		tmp = tmp->next;
 	}
-	if (pipe(pipe_fd) == -1)
-		return (perror("pipe"), 1);
-	if (connect(shell, cmds, envp, pipe_fd) == -1)
-		return (1);
+	i = 0;
+	while (shell->cmds)
+	{
+		if (shell->cmds)
+			if (pipe(pipe_fd) == -1)
+				return (perror("pipe"), 1);
+		if (connect(shell, envp, pipe_fd) == -1)
+			return (1);
+		shell->cmds = shell->cmds->next;
+	}
 	i = 0;
 	while (i < n)
 	{
@@ -71,4 +100,4 @@ int	pipex(t_shell *shell, char **cmds, char **envp)
 		i++;
 	}
 	return (0);
-}
+}*/

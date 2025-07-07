@@ -6,15 +6,15 @@
 /*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/03 09:48:20 by kbossio           #+#    #+#             */
-/*   Updated: 2025/06/18 15:06:57 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/06 08:10:25 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
-
+//8
 int	cd(char **path)
 {
-	char *dir;
+	char	*dir;
 
 	if (!path || !path[0])
 	{
@@ -22,7 +22,7 @@ int	cd(char **path)
 		if (!dir)
 			return (printf("bash: cd: HOME not set\n"), 1);
 		if (chdir(dir) == -1)
-			return (printf("bash: cd: %s: No such file or directory\n", dir), 1);
+			return (printf("bash: cd: %s: No such file or dir\n", dir), 1);
 		return (0);
 	}
 	if (path[1])
@@ -46,6 +46,7 @@ int	pwd(void)
 	if (pwd != NULL)
 	{
 		printf("%s\n", pwd);
+		free(pwd);
 		return (0);
 	}
 	else
@@ -104,84 +105,79 @@ int	env(char **envp)
 
 char	**export(char **env, char **str)
 {
+	char	**tmp;
+
 	if (str == NULL || *str == NULL)
 		print_exp(env);
 	else
-		return (add_exp(str, env));
+	{
+		tmp = env;
+		env = add_exp(str, env);	
+		free_arr(tmp, NULL);
+	}
 	return (env);
 }
 
-int	exit_shell(int status,t_shell *shell, char **str)
+int	exit_shell(int status, t_shell *shell, char **str)
 {
+	int	fd;
+
+	fd = 0;
 	printf("Exiting shell...\n");
-	if (str != NULL)
-	{
+	if (str)
 		free_arr(str, NULL);
-		status = 0;
+	if (shell)
+		free_all(shell);
+	while (fd < 1024)
+	{
+		close(fd);
+		fd++;
 	}
-	if (shell && shell->tokens)
-    {
-        free_tokens(shell->tokens);
-        shell->tokens = NULL;
-    }
 	clear_history();
 	exit(status);
 }
 
-int check_cmd(t_shell *shell, char **cmds, char **envp)
+char	**execute(t_shell *shell, char **cmd, char *envp[])
 {
-    int i = 0;
-    (void)envp;
-    while (cmds[i])
-    {
-        if (ft_strncmp(cmds[i], "|", 1) == 0)
-            printf("Found pipe symbol '|', skipping pipex for now\n");
-        else if (ft_strncmp(cmds[i], ">>", 2) == 0)
-            printf("Found '>>', skipping red_app for now\n");
-        else if (ft_strncmp(cmds[i], ">", 1) == 0)
-		{
-			printf("Found '>', skipping red_out for now\n");
-			red_out(shell, cmds, envp);
-        }
-        else if (ft_strncmp(cmds[i], "<", 1) == 0)
-            printf("Found '<', skipping red_in for now\n");
-        i++;
-    }
-    return (-2);
-}
+	int		stdout_backup;
+	int		stdin_backup;
+	char	es;
 
-char **execute(t_shell *shell, char **cmd, char *envp[])
-{
-	int		stdout_backup = dup(STDOUT_FILENO);
-	int		stdin_backup = dup(STDIN_FILENO);
-	char	es = 0;
-
+	es = 0;
+	stdin_backup = dup(STDIN_FILENO);
+	stdout_backup = dup(STDOUT_FILENO);
 	if (handle_redirections(shell->cmds))
-		return (envp);
-	if (check_cmd(shell, cmd, envp) == -2)
 	{
-		if (ft_strncmp(cmd[0], "cd", 2) == 0)
-			es = cd(cmd + 1);
-		else if (ft_strncmp(cmd[0], "pwd", 3) == 0)
-			es = pwd();
-		else if (ft_strncmp(cmd[0], "echo", 4) == 0)
-			es = ft_echo(cmd + 1);
-		else if (ft_strncmp(cmd[0], "env", 3) == 0)
-			es = env(envp);
-		else if (ft_strncmp(cmd[0], "export", 6) == 0)
-			envp = export(envp, cmd + 1);
-		else if (ft_strncmp(cmd[0], "unset", 5) == 0)
-			es = unset(cmd + 1, envp);
-		else if (ft_strncmp(cmd[0], "exit", 4) == 0)
-			exit_shell(es, shell, envp);
-		else
-			es = exec_external(cmd, envp);
+		restore_fds(stdin_backup, stdout_backup);
+		return (envp);
 	}
-	dup2(stdout_backup, STDOUT_FILENO);
-	dup2(stdin_backup, STDIN_FILENO);
-	close(stdout_backup);
-	close(stdin_backup);
+	if (ft_strcmp(cmd[0], "cd") == 0)
+		es = cd(cmd + 1);
+	else if (ft_strcmp(cmd[0], "pwd") == 0)
+		es = pwd();
+	else if (ft_strcmp(cmd[0], "echo") == 0)
+		es = ft_echo(cmd + 1);
+	else if (ft_strcmp(cmd[0], "env") == 0)
+		es = env(envp);
+	else if (ft_strcmp(cmd[0], "export") == 0)
+		envp = export(envp, cmd + 1);
+	else if (ft_strcmp(cmd[0], "unset") == 0)
+		es = unset(cmd + 1, envp);
+	else if (ft_strcmp(cmd[0], "exit") == 0)
+	{
+		restore_fds(stdin_backup, stdout_backup);
+		exit_shell(es, shell, envp);
+	}
+	else
+		es = exec_external(shell->cmds, shell->cmds->argv, envp);
+	restore_fds(stdin_backup, stdout_backup);
 	return (envp);
 }
 
-
+void	restore_fds(int in, int out)
+{
+	dup2(out, STDOUT_FILENO);
+	dup2(in, STDIN_FILENO);
+	close(in);
+	close(out);
+}

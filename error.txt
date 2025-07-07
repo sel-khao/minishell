@@ -1,0 +1,23 @@
+exit don't update the exit_status of the program and (probably don't handle the cases):
+    exit 123
+    exit 298
+    exit +100
+    exit "+100"
+    exit +"100"
+    exit -100
+    exit "-100"
+    exit -"100"
+    exit hello
+    exit 42 world
+    if you write echo $? press enter and after you press ctrl+d fd opened
+if i only write <<a you don't open the heredoc
+if i open multiple here_doc like cat <<a<<b<<c it don't work
+    ctrl + \ if done in a command like cat it have to print a new line and after that
+    says what bash says
+if you use the pipes and after that you exit the fds leaks and and the whole program leak
+if you do a ctrl + c after you open a command like cat, wc or stuff like this you print to many readlines
+the here_doc don't expand variables(on every line you to check if is it expandable)
+cat | cat | ls
+the redirections in out have problems(you have to backup the fd of input)
+if i try unset PATH and after that i run a command like ls like this it (core dump)
+cat <<a > wc - l > file.txt don't work properly
