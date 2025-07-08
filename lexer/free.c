@@ -6,7 +6,7 @@
 /*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/16 08:07:09 by sel-khao          #+#    #+#             */
-/*   Updated: 2025/07/04 18:21:47 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/09 00:29:18 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,36 +40,36 @@ void	free_redir(t_redir *redir)
 	}
 }
 
-void	free_all(t_shell *shell)
+void free_tokens(t_token *tokens)
 {
-	if (shell->input)
-	{
-		free(shell->input);
-		shell->input = NULL;
-	}
-	if (shell->tokens)
-	{
-		free_tokens(shell->tokens);
-		shell->tokens = NULL;
-	}
-	if (shell->cmds)
-	{
-		free_cmds(shell->cmds);
-		shell->cmds = NULL;
-	}
+    t_token *tmp;
+
+    while (tokens)
+    {
+        tmp = tokens;
+        tokens = tokens->next;
+        free(tmp->value);
+        free(tmp);
+    }
 }
 
-void	free_tokens(t_token *tokens)
+void free_all(t_shell *shell)
 {
-	t_token	*tmp;
-
-	while (tokens)
-	{
-		tmp = tokens;
-		tokens = tokens->next;
-		free(tmp->value);
-		free(tmp);
-	}
+    if (shell->input)
+    {
+        free(shell->input);
+        shell->input = NULL;
+    }
+    if (shell->tokens)
+    {
+        free_tokens(shell->tokens);
+        shell->tokens = NULL;
+    }
+    if (shell->cmds)
+    {
+        free_cmds(shell->cmds);
+        shell->cmds = NULL;
+    }
 }
 
 void	free_cmds(t_cmd *cmds)

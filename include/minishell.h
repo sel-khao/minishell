@@ -6,7 +6,7 @@
 /*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/20 07:47:00 by sel-khao          #+#    #+#             */
-/*   Updated: 2025/07/08 19:58:15 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/08 23:23:05 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,7 +128,7 @@ char	*env_value(char **envp, char *key);
 char	*append_char(char *base, char c);
 char	*str_append(char *base, const char *to_add);
 
-int	exit_shell(int status, t_shell *shell, char **envp, char **str);
+int		exit_shell(int status, t_shell *shell, char **envp, char **str);
 int		print_exp(char **str);
 int		check_same(char *str, char **envp);
 int		match_word(char *str, char **envp);

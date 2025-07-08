@@ -6,7 +6,7 @@
 /*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 11:25:53 by kbossio           #+#    #+#             */
-/*   Updated: 2025/07/08 19:54:52 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/08 23:36:05 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ void	signal_handler(int sig)
 void	start_signals(void)
 {
 	signal(SIGINT, signal_handler);
-	signal(SIGQUIT, SIG_DFL);//or SIG_IGN
+	signal(SIGQUIT, SIG_IGN);
 }
 
 static char	**get_path_dirs(char *envp[])
@@ -90,6 +90,7 @@ static char	*find_executable(char *cmd, char *envp[])
 
 int	exec_external(t_cmd *cmd, char **args, char **envp)
 {
+	(void)cmd;
 	pid_t	pid;
 	int		status;
 	char	*exe_path;
@@ -133,8 +134,6 @@ int	exec_external(t_cmd *cmd, char **args, char **envp)
 	{
 		signal(SIGINT, SIG_DFL);
 		signal(SIGQUIT, SIG_DFL);
-		if (cmd->redir && cmd->redir->type == HEREDOC)
-			handle_heredoc(cmd->redir->filename, envp, cmd);
 		execve(exe_path, args, envp);
 		perror("execve");
 		exit(1);

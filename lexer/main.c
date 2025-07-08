@@ -6,7 +6,7 @@
 /*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/20 07:47:10 by sel-khao          #+#    #+#             */
-/*   Updated: 2025/07/08 22:37:39 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/09 00:14:07 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -159,6 +159,7 @@ int	main(int ac, char **av, char **envp)
 		if (!shell.input)
 		{
 			printf("exit\n");
+			rl_clear_history();
     		free_all(&shell);
     		free_arr(str, NULL);
 			str = NULL;
@@ -180,6 +181,7 @@ int	main(int ac, char **av, char **envp)
 			shell.input = NULL;
 		}
 	}
+	rl_clear_history();
 	free_all(&shell);
 	free_arr(str, NULL);
 	str = NULL;

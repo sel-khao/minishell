@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execute.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sel-khao <sel-khao@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/03 09:48:20 by kbossio           #+#    #+#             */
-/*   Updated: 2025/07/07 18:49:05 by sel-khao         ###   ########.fr       */
+/*   Updated: 2025/07/09 00:26:32 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -166,8 +166,8 @@ int	exit_shell(int status, t_shell *shell, char **envp, char **str)
 		else
 			status_code = status_code % 256;
 		if (envp)
-		free_arr(envp, NULL);
-		clear_history();
+			free_arr(str, NULL);
+		rl_clear_history();
 		if (shell)
 			free_all(shell);
 		while (fd < 1024)
@@ -209,6 +209,7 @@ char	**execute(t_shell *shell, char **cmd, char *envp[])
 	else if (ft_strcmp(cmd[0], "exit") == 0)
 	{
 		restore_fds(stdin_backup, stdout_backup);
+		rl_clear_history();
 		exit_shell(es, shell, envp, cmd + 1);
 	}
 	else
