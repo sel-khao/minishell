@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   signals.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sel-khao <sel-khao@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 11:25:53 by kbossio           #+#    #+#             */
-/*   Updated: 2025/07/06 08:02:29 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/07 18:42:18 by sel-khao         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ void	signal_handler(int sig)
 void	start_signals(void)
 {
 	signal(SIGINT, signal_handler);
-	signal(SIGQUIT, SIG_IGN);
+	signal(SIGQUIT, SIG_DFL);//or SIG_IGN
 }
 
 static char	**get_path_dirs(char *envp[])
@@ -38,7 +38,7 @@ static char	**get_path_dirs(char *envp[])
 
 	while (*envp && !ft_strnstr(*envp, "PATH=", 5))
 		envp++;
-	if (!ft_strnstr(*envp, "PATH=", 5))
+	if (!*envp)
 		return (NULL);
 	dirs = ft_split(ft_strnstr(*envp, "PATH=", 5) + 5, ':');
 	return (dirs);
@@ -141,8 +141,12 @@ int	exec_external(t_cmd *cmd, char **args, char **envp)
 	}
 	else
 	{
+		signal(SIGINT, SIG_IGN);
+		signal(SIGQUIT, SIG_IGN);
 		while (waitpid(pid, &status, 0) == -1)
 			;
+		signal(SIGINT, signal_handler);
+		signal(SIGQUIT, SIG_DFL);
 		if (WIFEXITED(status))
 			g_status = WEXITSTATUS(status);
 		else if (WIFSIGNALED(status))
@@ -165,6 +169,26 @@ void handle_heredoc(char *delimiter, char **envp)
     dup2(hdoc_fd, STDIN_FILENO);
     close(hdoc_fd);
 }
+
+/* void	handle_heredoc(t_cmd *cmd)
+{
+	t_redir	*r;
+	int		hdoc_fd;
+
+	r = cmd->redir;
+	while (r)
+	{
+		if (r->type == HDOC)
+		{
+			hdoc_fd = heredoc_pipe(r->filename);
+			if (hdoc_fd < 0)
+				exit(1);
+			dup2(hdoc_fd, STDIN_FILENO);
+			close(hdoc_fd);
+		}
+		r = r->next;
+	}
+} */
 
 /*
 X_OK = controllo permesso di esecuzione

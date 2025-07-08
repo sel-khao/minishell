@@ -6,7 +6,7 @@
 /*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/20 07:47:10 by sel-khao          #+#    #+#             */
-/*   Updated: 2025/07/07 15:27:16 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/08 18:06:35 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -157,7 +157,7 @@ int	main(int ac, char **av, char **envp)
 		ft_readline(&shell);
 		if (!shell.input)
 		{
-			printf("exitop\n");
+			printf("exit\n");
     		free_all(&shell);
     		free_arr(str, NULL);
 			str = NULL;

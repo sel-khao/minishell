@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execute.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sel-khao <sel-khao@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/03 09:48:20 by kbossio           #+#    #+#             */
-/*   Updated: 2025/07/06 08:10:25 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/07 18:49:05 by sel-khao         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,13 +46,12 @@ int	pwd(void)
 	if (pwd != NULL)
 	{
 		printf("%s\n", pwd);
-		free(pwd);
-		return (0);
+		return (free(pwd), 0);
 	}
 	else
 	{
 		perror("pwd");
-		return (1);
+		return (free(pwd), 1);
 	}
 }
 
@@ -118,22 +117,66 @@ char	**export(char **env, char **str)
 	return (env);
 }
 
-int	exit_shell(int status, t_shell *shell, char **str)
+int	check_overflow(char *str, long long *result)
 {
-	int	fd;
+	int	i;
+	int	sign;
+	unsigned long long	num;
+
+	i = 0;
+	num = 0;
+	sign = 1;
+	if (str[i] == '-' || str[i] == '+')
+	{
+		if (str[i] == '-')
+			sign = -1;
+		i++;
+	}
+	while (str[i])
+	{
+		if (str[i] < '0' || str[i] > '9')
+			return (0);
+		num = num * 10 + (str[i] - '0');
+		if ((num > LLONG_MAX && sign == 1) || (num > LLONG_MIN && sign == -1))
+			return (0);
+		i++;
+	}
+	*result = (long long)num * sign;
+	return (1);
+}
+
+int	exit_shell(int status, t_shell *shell, char **envp, char **str)
+{
+	long long	status_code;
+	int			fd;
 
 	fd = 0;
-	printf("Exiting shell...\n");
-	if (str)
-		free_arr(str, NULL);
-	if (shell)
-		free_all(shell);
-	while (fd < 1024)
+	if (str && str[0])
 	{
-		close(fd);
-		fd++;
+	    if (str[1])
+			return (write(2, "bash: exit: too many arguments\n", 31), 1);
+		printf("exit\n");
+		if (check_overflow(str[0], &status_code) == 0)
+		{
+			write(2, "bash: exit: ", 12);
+			write(2, str[0], ft_strlen(str[0]));
+			write(2, ": numeric argument required\n", 28);
+			status_code = 2;
+		}
+		else
+			status_code = status_code % 256;
+		if (envp)
+		free_arr(envp, NULL);
+		clear_history();
+		if (shell)
+			free_all(shell);
+		while (fd < 1024)
+		{
+			close(fd);
+			fd++;
+		}
+		exit(status_code);
 	}
-	clear_history();
 	exit(status);
 }
 
@@ -166,7 +209,7 @@ char	**execute(t_shell *shell, char **cmd, char *envp[])
 	else if (ft_strcmp(cmd[0], "exit") == 0)
 	{
 		restore_fds(stdin_backup, stdout_backup);
-		exit_shell(es, shell, envp);
+		exit_shell(es, shell, envp, cmd + 1);
 	}
 	else
 		es = exec_external(shell->cmds, shell->cmds->argv, envp);

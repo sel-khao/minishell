@@ -6,7 +6,7 @@
 /*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/20 07:47:00 by sel-khao          #+#    #+#             */
-/*   Updated: 2025/07/07 15:05:40 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/08 18:48:20 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,7 @@ int		is_word(char c);
 int		is_space(char c);
 int		is_special(char c);
 int		mult_redir(char *input);
+int		in_quotes(char *input, int i);
 
 int		validate_quote(char *str);
 int		validate_pipe(char *input);
@@ -107,6 +108,7 @@ void	parsing(t_shell *shell, char **envp);
 void	create_token(t_shell *shell, char *input, int *i);
 void	tok_cmd(t_shell *shell, char **envp);
 
+char *process_quotes(char *word);
 char	*extract_quoted(char *input, int *i);
 
 void	add_token(t_shell *shell, char *value, int type, char quote_type);
@@ -127,7 +129,7 @@ char	*env_value(char **envp, char *key);
 char	*append_char(char *base, char c);
 char	*str_append(char *base, const char *to_add);
 
-int		exit_shell(int status, t_shell *shell, char **str);
+int	exit_shell(int status, t_shell *shell, char **envp, char **str);
 int		print_exp(char **str);
 int		check_same(char *str, char **envp);
 int		match_word(char *str, char **envp);
