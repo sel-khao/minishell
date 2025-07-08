@@ -6,7 +6,7 @@
 /*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/20 07:47:00 by sel-khao          #+#    #+#             */
-/*   Updated: 2025/07/08 18:48:20 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/08 19:58:15 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,7 @@ typedef struct s_redir
 typedef struct s_cmd
 {
 	char			**argv;//for kri
+	int				fd;//for heredoc
 	t_redir			*redir;
 	struct s_cmd	*next;
 }	t_cmd;
@@ -77,7 +78,6 @@ typedef struct s_shell
 	t_token	*tokens;
 	t_cmd	*cmds;
 }	t_shell;
-
 
 int		is_word(char c);
 int		is_space(char c);
@@ -108,20 +108,19 @@ void	parsing(t_shell *shell, char **envp);
 void	create_token(t_shell *shell, char *input, int *i);
 void	tok_cmd(t_shell *shell, char **envp);
 
-char *process_quotes(char *word);
+char	*process_quotes(char *word);
 char	*extract_quoted(char *input, int *i);
 
 void	add_token(t_shell *shell, char *value, int type, char quote_type);
 void	tokenadd_back(t_token **lst, t_token *new);
-
+void	handle_heredoc(char *delimiter, char **envp, t_cmd *cmd);
 void	handle_special(t_shell *shell, char *input, int *i);
 
 void	tokenize(t_shell *shell);
 void	check_type(t_token **tmp, t_cmd *cmd, char **envp);
 void	check_type2(t_token **tmp, t_cmd **cmd);
-void check_delim(t_token **tmp, char **envp);
+void    check_delim(t_token **tmp, char **envp, t_cmd *cmd);;
 void	add_redir(t_redir **redir_list, char *filename, int type);
-void handle_heredoc(char *delimiter, char **envp);
 int		heredoc_pipe(const char *delimiter, char **envp);
 
 char	*expand_var(const char *input, char **envp);

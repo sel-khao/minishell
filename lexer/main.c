@@ -6,7 +6,7 @@
 /*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/20 07:47:10 by sel-khao          #+#    #+#             */
-/*   Updated: 2025/07/08 18:06:35 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/08 22:37:39 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,7 @@ char	**add_word(char **argv, char *word)
 	return (av);
 }
 
-void	parsing(t_shell *shell, char **envp)
+/*void	parsing(t_shell *shell, char **envp)
 {
 	int		i;
 	t_token	*token;
@@ -87,9 +87,9 @@ void	parsing(t_shell *shell, char **envp)
 		}
 		cmd = cmd->next;
 	}
-}
+}*/
 
-/*void	parsing(t_shell *shell, char **envp)
+void	parsing(t_shell *shell, char **envp)
 {
 	if (validate_input(shell->input))
 	{
@@ -98,29 +98,30 @@ void	parsing(t_shell *shell, char **envp)
 	}
 	tokenize(shell);
 	tok_cmd(shell, envp);
-}*/
+}
 
-int	heredoc_pipe(const char *delimiter, char** envp)
+int heredoc_pipe(const char *delimiter, char** envp)
 {
-	int		pipefd[2];
-	char	*line;
-	char	*expand;
+    int     pipefd[2];
+    char    *line;
+    char    *expand;
 
-	if (pipe(pipefd) == -1)
-	{
-		perror("pipe");
-		return (-1);
-	}
-	signal(SIGINT, SIG_IGN);
-	while (1)
-	{
-		line = readline("> ");
-		if (!line || ft_strcmp(line, delimiter) == 0)
-		{
-			free(line);
-			break ;
-		}
+    if (pipe(pipefd) == -1)
+    {
+        perror("pipe");
+        return (-1);
+    }
+    while (1)
+    {
+        line = readline("> ");
+        if (!line || ft_strcmp(line, delimiter) == 0)
+        {
+            free(line);
+            break;
+        }
 		expand = expand_var(line, envp);
+		write(pipefd[1], expand, ft_strlen(expand));
+		write(pipefd[1], "\n", 1);
 		if (!expand)
 		{
 			free(line);

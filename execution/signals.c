@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   signals.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sel-khao <sel-khao@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 11:25:53 by kbossio           #+#    #+#             */
-/*   Updated: 2025/07/07 18:42:18 by sel-khao         ###   ########.fr       */
+/*   Updated: 2025/07/08 19:54:52 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,7 +134,7 @@ int	exec_external(t_cmd *cmd, char **args, char **envp)
 		signal(SIGINT, SIG_DFL);
 		signal(SIGQUIT, SIG_DFL);
 		if (cmd->redir && cmd->redir->type == HEREDOC)
-			handle_heredoc(cmd->redir->filename, envp);
+			handle_heredoc(cmd->redir->filename, envp, cmd);
 		execve(exe_path, args, envp);
 		perror("execve");
 		exit(1);
@@ -156,9 +156,10 @@ int	exec_external(t_cmd *cmd, char **args, char **envp)
 	return (0);
 }
 
-void handle_heredoc(char *delimiter, char **envp)
+void handle_heredoc(char *delimiter, char **envp, t_cmd *cmd)
 {
     int hdoc_fd;
+	char	*fd_str;
 
     hdoc_fd = heredoc_pipe(delimiter, envp);
     if (hdoc_fd < 0)
@@ -166,8 +167,9 @@ void handle_heredoc(char *delimiter, char **envp)
         perror("heredoc pipe error");
         exit(1);
     }
-    dup2(hdoc_fd, STDIN_FILENO);
-    close(hdoc_fd);
+	fd_str = ft_itoa(hdoc_fd);
+    add_redir(&cmd->redir, fd_str, HEREDOC);
+    free(fd_str);
 }
 
 /* void	handle_heredoc(t_cmd *cmd)

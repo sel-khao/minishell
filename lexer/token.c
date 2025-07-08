@@ -6,7 +6,7 @@
 /*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:15:24 by sel-khao          #+#    #+#             */
-/*   Updated: 2025/07/08 19:11:47 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/08 22:36:06 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ char	*extract_token(const char *input, int start, int end)
 	out[j] = '\0';
 	return (out);
 }
+
 void    tokenize(t_shell *shell)
 {
     int     i;
@@ -34,12 +35,11 @@ void    tokenize(t_shell *shell)
     char    *no_quote;
     char    *word;
     char    quote_type;
-    
+
     i = 0;
     input = shell->input;
     while (input[i] && is_space(input[i]))
         i++;
-    
     while (input[i])
     {
         if (is_special(input[i]))
@@ -50,14 +50,11 @@ void    tokenize(t_shell *shell)
             while (input[i] && (is_word(input[i]) || in_quotes(input, i)))
                 i++;
             word = ft_substr(input, start, i - start);
-            
-            // Detect quote type before processing
             quote_type = 0;
             if (strchr(word, '\''))
                 quote_type = '\'';
             else if (strchr(word, '"'))
                 quote_type = '"';
-            
             no_quote = process_quotes(word);
             add_token(shell, no_quote, WORD, quote_type);
             free(word);
@@ -70,10 +67,10 @@ void    tokenize(t_shell *shell)
 
 char *process_quotes(char *word)
 {
-    char *result;
+    char	*result;
     int     i;
     int     j;
-    char quote;
+    char	quote;
         
     result = malloc(strlen(word) + 1);
     if (!result)
@@ -151,7 +148,7 @@ void	tok_cmd(t_shell *shell, char **envp)
 	{
 		prev = tmp;
 		if (tmp->type == HEREDOC)
-			check_delim(&tmp, envp);
+			check_delim(&tmp, envp, cmd);
 		else if (tmp->type == PIPE)
 			check_type2(&tmp, &cmd);
 		else
@@ -162,7 +159,7 @@ void	tok_cmd(t_shell *shell, char **envp)
 	shell->cmds = head;
 }
 
-void check_delim(t_token **tmp, char **envp)
+void check_delim(t_token **tmp, char **envp, t_cmd *cmd)
 {
     t_token *delim;
     char *delimiter;
@@ -171,7 +168,7 @@ void check_delim(t_token **tmp, char **envp)
     if (delim)
     {
         delimiter = delim->value;
-        handle_heredoc(delimiter, envp);
+        handle_heredoc(delimiter, envp, cmd);
         *tmp = (*tmp)->next->next;
     }
 }
