@@ -6,7 +6,7 @@
 /*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/03 09:48:20 by kbossio           #+#    #+#             */
-/*   Updated: 2025/07/09 00:26:32 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/09 01:30:10 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -150,6 +150,7 @@ int	exit_shell(int status, t_shell *shell, char **envp, char **str)
 	long long	status_code;
 	int			fd;
 
+	status_code = status;
 	fd = 0;
 	if (str && str[0])
 	{
@@ -165,19 +166,18 @@ int	exit_shell(int status, t_shell *shell, char **envp, char **str)
 		}
 		else
 			status_code = status_code % 256;
-		if (envp)
-			free_arr(str, NULL);
-		rl_clear_history();
-		if (shell)
-			free_all(shell);
-		while (fd < 1024)
-		{
-			close(fd);
-			fd++;
-		}
-		exit(status_code);
 	}
-	exit(status);
+	if (envp)
+		free_arr(envp, NULL);
+	rl_clear_history();
+	if (shell)
+		free_all(shell);
+	while (fd < 1024)
+	{
+		close(fd);
+		fd++;
+	}
+	exit(status_code);
 }
 
 char	**execute(t_shell *shell, char **cmd, char *envp[])
