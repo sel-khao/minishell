@@ -6,25 +6,28 @@
 /*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/16 08:07:09 by sel-khao          #+#    #+#             */
-/*   Updated: 2025/07/09 00:29:18 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/09 01:58:26 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
 
-void	free_argv(char **argv)
+void free_argv(char **argv)
 {
-	int	i;
-
-	i = 0;
-	if (!argv)
-		return ;
-	while (argv[i])
-	{
-		free(argv[i]);
-		i++;
-	}
-	free(argv);
+    int i = 0;
+    
+    if (!argv)
+        return;
+    
+    printf("DEBUG: free_argv called, argv = %p\n", argv);
+    while (argv[i])
+    {
+        printf("DEBUG: freeing argv[%d] = '%s'\n", i, argv[i]);
+        free(argv[i]);
+        i++;
+    }
+    free(argv);
+    printf("DEBUG: free_argv completed\n");
 }
 
 void	free_redir(t_redir *redir)
@@ -72,18 +75,21 @@ void free_all(t_shell *shell)
     }
 }
 
-void	free_cmds(t_cmd *cmds)
+void free_cmds(t_cmd *cmds)
 {
-	t_cmd	*tmp;
-
-	while (cmds)
-	{
-		tmp = cmds;
-		cmds = cmds->next;
-		if (tmp->argv)
-			free_argv(tmp->argv);
-		if (tmp->redir)
-			free_redir(tmp->redir);
-		free(tmp);
-	}
+    t_cmd *tmp;
+    
+    printf("DEBUG: free_cmds called\n");
+    while (cmds)
+    {
+        tmp = cmds;
+        cmds = cmds->next;
+        printf("DEBUG: freeing cmd, argv = %p\n", tmp->argv);
+        if (tmp->argv)
+            free_argv(tmp->argv);
+        if (tmp->redir)
+            free_redir(tmp->redir);
+        free(tmp);
+    }
+    printf("DEBUG: free_cmds completed\n");
 }

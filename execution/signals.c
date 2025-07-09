@@ -6,7 +6,7 @@
 /*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 11:25:53 by kbossio           #+#    #+#             */
-/*   Updated: 2025/07/08 23:36:05 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/09 01:52:59 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,14 +91,13 @@ static char	*find_executable(char *cmd, char *envp[])
 int	exec_external(t_cmd *cmd, char **args, char **envp)
 {
 	(void)cmd;
-	pid_t	pid;
-	int		status;
+	//pid_t	pid;
+	//int		status;
 	char	*exe_path;
 
 	if (!args[0] || args[0][0] == '\0')
 	{
         ft_putendl_fd("bash: : command not found", STDERR_FILENO);
-        g_status = 127;
         return (127);
     }
 	exe_path = find_executable(args[0], envp);
@@ -116,7 +115,6 @@ int	exec_external(t_cmd *cmd, char **args, char **envp)
 			ft_putstr_fd(args[0], STDERR_FILENO);
 			ft_putendl_fd(": command not found", STDERR_FILENO);
 		}
-		g_status = 127;
 		return (127);
 	}
 	if (access(exe_path, X_OK) != 0)
@@ -124,11 +122,9 @@ int	exec_external(t_cmd *cmd, char **args, char **envp)
 		ft_putstr_fd(args[0], STDERR_FILENO);
 		ft_putendl_fd(": permission denied", STDERR_FILENO);
 		free(exe_path);
-		g_status = 126;
 		return (126);
 	}
-	pid = fork();
-	if (pid < 0)
+	/*if (pid < 0)
 		return (perror("fork"), free(exe_path), 1);
 	if (pid == 0)
 	{
@@ -150,9 +146,13 @@ int	exec_external(t_cmd *cmd, char **args, char **envp)
 			g_status = WEXITSTATUS(status);
 		else if (WIFSIGNALED(status))
 			g_status = 128 + WTERMSIG(status);
-	}
+	}*/
+	signal(SIGINT, SIG_DFL);
+    signal(SIGQUIT, SIG_DFL);
+    execve(exe_path, args, envp);
+	perror("execve");
 	free(exe_path);
-	return (0);
+	return (1);
 }
 
 void handle_heredoc(char *delimiter, char **envp, t_cmd *cmd)

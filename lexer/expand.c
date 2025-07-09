@@ -75,7 +75,9 @@ void	check_type(t_token **tmp, t_cmd *cmd, char **envp)
 			expand = ft_strdup((*tmp)->value);
 		if (!expand)
 			expand = ft_strdup("");
-		cmd->argv = add_word(cmd->argv, expand);
+		printf("DEBUG: Before add_word, cmd->argv = %p\n", cmd->argv);
+        cmd->argv = add_word(cmd->argv, expand);
+        printf("DEBUG: After add_word, cmd->argv = %p\n", cmd->argv);
 		free(expand);
 		*tmp = (*tmp)->next;
 	}

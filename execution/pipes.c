@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   pipes.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kbossio <kbossio@student.42firenze.it>     +#+  +:+       +#+        */
+/*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 10:47:51 by kbossio           #+#    #+#             */
-/*   Updated: 2025/07/05 17:50:08 by kbossio          ###   ########.fr       */
+/*   Updated: 2025/07/09 01:44:17 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,11 @@ static int	connect(t_shell *shell, char **envp, int pipe_fd[2])
 		close(pipe_fd[0]);
 		close(pipe_fd[1]);
 		execute(shell, shell->cmds->argv, envp);
+		if (shell)
+            free_all(shell);
+        if (envp)
+            free_arr(envp, NULL);
+        rl_clear_history();
 		exit(1);
 	}
 	if (shell->cmds->next)

@@ -6,7 +6,7 @@
 /*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/20 07:47:10 by sel-khao          #+#    #+#             */
-/*   Updated: 2025/07/09 00:14:07 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/09 02:02:41 by sara             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,9 @@ char	**add_word(char **argv, char *word)
 	}
 	av[i] = ft_strdup(word);
 	av[i + 1] = NULL;
-	free(argv);
+	printf("DEBUG: add_word freeing old argv = %p\n", argv);
+    free(argv);
+    printf("DEBUG: add_word returning new av = %p\n", av);
 	return (av);
 }
 
