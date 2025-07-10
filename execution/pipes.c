@@ -6,7 +6,7 @@
 /*   By: sel-khao <sel-khao@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 10:47:51 by kbossio           #+#    #+#             */
-/*   Updated: 2025/07/10 15:49:41 by sel-khao         ###   ########.fr       */
+/*   Updated: 2025/07/11 00:32:42 by sel-khao         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ static int	connect(t_shell *shell, char **envp, int pipe_fd[2], t_cmd *tmp)
 			close(pipe_fd[0]);
 		if (pipe_fd[1] != -1)
 			close(pipe_fd[1]);
-		execute(shell, shell->cmds->argv, envp, tmp);
+		execute(shell, shell->cmds->argv, envp);
 		shell->cmds = tmp;
 		if (shell)
 			free_all(shell);

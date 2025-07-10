@@ -6,7 +6,7 @@
 /*   By: sel-khao <sel-khao@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/20 07:47:00 by sel-khao          #+#    #+#             */
-/*   Updated: 2025/07/10 19:44:02 by sel-khao         ###   ########.fr       */
+/*   Updated: 2025/07/11 00:46:46 by sel-khao         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,6 +127,9 @@ void	free_all(t_shell *shell);
 void	free_redir(t_redir *redir);
 void	free_arr(char **str, char **new);
 
+char	**process_valid_export(char *str, char **new_env);
+char	**handle_existing_var(char *str, char **new_env, int j);
+
 void	check_redi(t_cmd *cmd, t_token **tmp);
 void	ft_readline(t_shell *shell);
 void	init(t_cmd *cmd);
@@ -153,7 +156,8 @@ char	*env_value(char **envp, char *key);
 char	*append_char(char *base, char c);
 char	*str_append(char *base, const char *to_add);
 
-int		exit_shell(int status, t_shell *shell, char **envp, char **str, t_cmd *tmp);
+void	cleanup_and_exit(t_shell *shell, char **envp, long long status_code);
+int		exitt(t_shell *shell, char **envp, char **str);
 int		print_exp(char **str);
 int		check_same(char *str, char **envp);
 int		match_word(char *str, char **envp);
@@ -173,7 +177,7 @@ char	**export(char **env, char **str, int *es);
 
 char	**add_exp(char **str, char **envp, int *es);
 char	**dup_env(char **envp);
-char	**execute(t_shell *shell, char **cmd, char *envp[], t_cmd *tmp);
+char	**execute(t_shell *shell, char **cmd, char *envp[]);
 char	*ft_rmchar(char *str, char c);
 
 void	start_signals(void);

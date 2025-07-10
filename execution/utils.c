@@ -6,7 +6,7 @@
 /*   By: sel-khao <sel-khao@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/03 11:38:14 by kbossio           #+#    #+#             */
-/*   Updated: 2025/07/10 22:53:44 by sel-khao         ###   ########.fr       */
+/*   Updated: 2025/07/11 00:16:20 by sel-khao         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,34 +35,28 @@ int	count_pipe(t_shell *shell)
 	return (shell->pipe);
 }
 
-void	free_arr(char **str, char **new)
+static void	free_single_arr(char **arr)
 {
 	int	i;
 
 	i = 0;
-	if (str)
+	if (arr)
 	{
-		while (str[i] != NULL)
+		while (arr[i] != NULL)
 		{
-			free(str[i]);
-			str[i] = NULL;
+			free(arr[i]);
+			arr[i] = NULL;
 			i++;
 		}
-		free(str);
-		str = NULL;
+		free(arr);
+		arr = NULL;
 	}
-	if (new != NULL)
-	{
-		i = 0;
-		while (new[i] != NULL)
-		{
-			free(new[i]);
-			new[i] = NULL;
-			i++;
-		}
-		free(new);
-		new = NULL;
-	}
+}
+
+void	free_arr(char **str, char **new)
+{
+	free_single_arr(str);
+	free_single_arr(new);
 }
 
 char	**dup_env(char **envp)

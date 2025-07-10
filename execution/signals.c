@@ -6,7 +6,7 @@
 /*   By: sel-khao <sel-khao@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 11:25:53 by kbossio           #+#    #+#             */
-/*   Updated: 2025/07/10 20:14:15 by sel-khao         ###   ########.fr       */
+/*   Updated: 2025/07/10 23:40:53 by sel-khao         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,6 @@ void	signal_handler(int sig)
 	if (sig == SIGQUIT)
 	{
 		g_status = 131;
-		//write(2, "Quit (core dumped)\n", 19);
 		rl_on_new_line();
 		rl_replace_line("", 0);
 		rl_redisplay();
