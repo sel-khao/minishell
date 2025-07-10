@@ -3,14 +3,37 @@
 /*                                                        :::      ::::::::   */
 /*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sel-khao <sel-khao@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/03 11:38:14 by kbossio           #+#    #+#             */
-/*   Updated: 2025/07/09 00:46:25 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/10 22:53:44 by sel-khao         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
+
+int	count_pipe(t_shell *shell)
+{
+	char	*input;
+	int		s;
+	int		d;
+
+	s = 0;
+	d = 0;
+	input = shell->input;
+	shell->pipe = 0;
+	while (*input)
+	{
+		if (*input == '\'' && d == 0)
+			s = !s;
+		else if (*input == '"' && s == 0)
+			d = !d;
+		else if (*input == '|' && s == 0 && d == 0)
+			shell->pipe++;
+		input++;
+	}
+	return (shell->pipe);
+}
 
 void	free_arr(char **str, char **new)
 {
@@ -66,16 +89,6 @@ char	**dup_env(char **envp)
 	}
 	env[i] = NULL;
 	return (env);
-}
-
-int	ft_strcmp(char *s1, const char *s2)
-{
-	size_t	i;
-
-	i = 0;
-	while (s1[i] && s2[i] && s1[i] == s2[i])
-		i++;
-	return ((unsigned char)s1[i] - (unsigned char )s2[i]);
 }
 
 char	*ft_rmchar(char *str, char c)

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ins_exp.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sel-khao <sel-khao@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/09 11:17:27 by kbossio           #+#    #+#             */
-/*   Updated: 2025/07/05 13:28:22 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/10 15:40:18 by sel-khao         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,45 +17,26 @@ int	check_ins(char *str)
 	int	i;
 
 	i = 0;
-	if (str[0] >= '0' && str[0] <= '9')
+	if (!str || str[0] == '\0')
+		return (printf("bash: export: `%s': not a valid identifier\n", str), 1);
+	if ((str[0] >= '0' && str[0] <= '9') || str[0] == '=')
 		return (printf("bash: export: `%s': not a valid identifier\n", str), 1);
 	while (str[i] != '\0' && str[i] != '=')
 	{
-		if ((str[i] < '0' && str[i] > '9') || (str[i] < 'A' && str[i] > 'Z')
-			|| (str[i] < 'a' && str[i] > 'z')
-			|| (str[i] == '+' && str[i + 1] != '='))
+		if (!((str[i] >= 'A' && str[i] <= 'Z')
+				|| (str[i] >= 'a' && str[i] <= 'z')
+				|| (str[i] >= '0' && str[i] <= '9')
+				|| (str[i] == '_')
+				|| (str[i] == '+' && str[i + 1] == '=')))
 		{
 			printf("bash: export: `%s': not a valid identifier\n", str);
 			return (1);
 		}
+		if (str[i] == '+' && str[i + 1] == '=')
+			break ;
 		i++;
 	}
 	return (0);
-}
-
-char	**rm_quotes(char **str)
-{
-	int		i;
-	char	*tmp;
-
-	i = 0;
-	while (str[i])
-	{
-		if (strchr(str[i], '\''))
-		{
-			tmp = str[i];
-			str[i] = ft_rmchar(tmp, '\'');
-			free(tmp);
-		}
-		if (strchr(str[i], '\"'))
-		{
-			tmp = str[i];
-			str[i] = ft_rmchar(tmp, '\"');
-			free(tmp);
-		}
-		i++;
-	}
-	return (str);
 }
 
 char	**ins_exp(char *str, char **envp)
@@ -67,6 +48,8 @@ char	**ins_exp(char *str, char **envp)
 	while (envp[i])
 		i++;
 	new = malloc(sizeof(char *) * (i + 2));
+	if (!new)
+		return (NULL);
 	i = 0;
 	while (envp[i] != NULL)
 	{
@@ -74,10 +57,11 @@ char	**ins_exp(char *str, char **envp)
 		i++;
 	}
 	new[i] = ft_strdup(str);
-	return (new[i + 1] = NULL, new);//free old, return new
+	new[i + 1] = NULL;
+	return (new);
 }
 
-char	**add_exp(char **str, char **envp)
+char	**add_exp(char **str, char **envp, int *es)
 {
 	int		i;
 	int		j;
@@ -87,7 +71,7 @@ char	**add_exp(char **str, char **envp)
 	char	*tmp;
 
 	i = 0;
-	new_env = dup_env(envp);//
+	new_env = dup_env(envp);
 	if (!new_env)
 		return (NULL);
 	while (str[i])
@@ -120,12 +104,16 @@ char	**add_exp(char **str, char **envp)
 			}
 			else
 			{
+				tmp = ft_rmchar(str[i], '+');
 				old_env = new_env;
-				new_env = ins_exp(str[i], new_env);
+				new_env = ins_exp(tmp, new_env);
 				free_arr(old_env, NULL);
+				free(tmp);
 			}
 		}
+		else
+			*es = 1;
 		i++;
 	}
-	return (new_env);//return new allocated
+	return (new_env);
 }

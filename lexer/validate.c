@@ -6,7 +6,7 @@
 /*   By: sel-khao <sel-khao@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/16 08:07:46 by sel-khao          #+#    #+#             */
-/*   Updated: 2025/07/07 18:30:36 by sel-khao         ###   ########.fr       */
+/*   Updated: 2025/07/10 12:04:29 by sel-khao         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,29 +20,33 @@ int	validate_input(char *input)
 		input++;
 	if (*input == '\0')
 		return (0);
-	if (validate_quote(input) == 1 || validate_pipe(input) == 1 ||
-		validate_redirection(input) == 1)
+	if (validate_quote(input) == 1 || validate_pipe(input) == 1
+		|| validate_redirection(input) == 1)
 		return (1);
 	return (0);
 }
 
-int	validate_heredoc(char **input)
+int	handle_redirection(char **input)
 {
-	if (*input && (*input)[0] == '<' && (*input)[1] == '<')
+	if (**input == '<' && *(*input + 1) == '<')
 	{
-		*input += 2;
-		while (**input == ' ')
-			(*input)++;
-		if (**input == '\0')
+		if (validate_heredoc(input))
 			return (1);
-		return (0);
 	}
+	else if (mult_redir(*input))
+		return (1);
+	while (**input == '<' || **input == '>')
+		(*input)++;
+	while (**input == ' ')
+		(*input)++;
+	if (!**input || **input == '<' || **input == '>')
+		return (1);
 	return (0);
 }
 
 int	validate_redirection(char *input)
 {
-    char	quote;
+	char	quote;
 
 	while (*input)
 	{
@@ -57,38 +61,12 @@ int	validate_redirection(char *input)
 		}
 		else if (*input == '<' || *input == '>')
 		{
-			if (*input == '<' && *(input + 1) == '<')
-			{
-				if (validate_heredoc(&input))
-					return (1);
-			} else if (mult_redir(input))
-				return (1);
-			while (*input == '<' || *input == '>')
-				input++;
-			while (*input == ' ')
-				input++;
-			if (!*input || *input == '<' || *input == '>')
+			if (handle_redirection(&input))
 				return (1);
 		}
 		else
 			input++;
 	}
-	return (0);
-}
-
-int	mult_redir(char *input)
-{
-	int		count;
-	char	a;
-
-	count = 1;
-	a = *input;
-	if (input[1] && input[1] != a && (input[1] == '<' || input[1] == '>'))
-		return (1);
-	while (input[count] && input[count] == a)
-		count++;
-	if (count > 2)
-		return (1);
 	return (0);
 }
 
@@ -103,15 +81,10 @@ int	validate_quote(char *str)
 	s = 0;
 	while (str[i])
 	{
-		if (str[i] == '\\' && (str[i + 1] == '\'' || str[i + 1] == '"'))
-			i++;
-		else
-		{
-			if (str[i] == '\'' && d == 0)
-				s = !s;
-			else if (str[i] == '"' && s == 0)
-				d = !d;
-		}
+		if (str[i] == '\'' && d == 0)
+			s = !s;
+		else if (str[i] == '"' && s == 0)
+			d = !d;
 		i++;
 	}
 	if (s == 1 || d == 1)

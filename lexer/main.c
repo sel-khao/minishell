@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sel-khao <sel-khao@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/20 07:47:10 by sel-khao          #+#    #+#             */
-/*   Updated: 2025/07/09 02:02:41 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/10 20:20:38 by sel-khao         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,70 +27,6 @@ void	print_header(void)
 	printf(RESET);
 }
 
-char	**add_word(char **argv, char *word)
-{
-	int		i;
-	int		j;
-	char	**av;
-
-	i = 0;
-	j = 0;
-	if (argv)
-	{
-		while (argv[i])
-			i++;
-	}
-	av = malloc(sizeof(char *) * (i + 2));
-	if (!av)
-		return (NULL);
-	while (j < i)
-	{
-		av[j] = argv[j];
-		j++;
-	}
-	av[i] = ft_strdup(word);
-	av[i + 1] = NULL;
-	printf("DEBUG: add_word freeing old argv = %p\n", argv);
-    free(argv);
-    printf("DEBUG: add_word returning new av = %p\n", av);
-	return (av);
-}
-
-/*void	parsing(t_shell *shell, char **envp)
-{
-	int		i;
-	t_token	*token;
-	t_cmd	*cmd;
-
-	if (validate_input(shell->input))
-	{
-		printf("Invalid input: %s\n", shell->input);
-		return ;
-	}
-	tokenize(shell);
-	printf("Tokens:\n");
-	token = shell->tokens;
-	while (token)
-	{
-		printf("Token: '%s', Type: %d, Quote: %c\n", token->value, token->type, token->quote);
-		printf("  type: %d, value: '%s'\n", token->type, token->value);
-		token = token->next;
-	}
-	tok_cmd(shell, envp);
-	cmd = shell->cmds;
-	while (cmd)
-	{
-		printf("Command:\n");
-		i = 0;
-		while (cmd->argv && cmd->argv[i])
-		{
-			printf("argv[%d]: %s\n", i, cmd->argv[i]);
-			i++;
-		}
-		cmd = cmd->next;
-	}
-}*/
-
 void	parsing(t_shell *shell, char **envp)
 {
 	if (validate_input(shell->input))
@@ -102,41 +38,46 @@ void	parsing(t_shell *shell, char **envp)
 	tok_cmd(shell, envp);
 }
 
-int heredoc_pipe(const char *delimiter, char** envp)
+static char	**ft_minishell(t_shell *shell, char **str)
 {
-    int     pipefd[2];
-    char    *line;
-    char    *expand;
-
-    if (pipe(pipefd) == -1)
-    {
-        perror("pipe");
-        return (-1);
-    }
-    while (1)
-    {
-        line = readline("> ");
-        if (!line || ft_strcmp(line, delimiter) == 0)
-        {
-            free(line);
-            break;
-        }
-		expand = expand_var(line, envp);
-		write(pipefd[1], expand, ft_strlen(expand));
-		write(pipefd[1], "\n", 1);
-		if (!expand)
-		{
-			free(line);
-			close(pipefd[1]);
-			return (-1);
-		}
-		write(pipefd[1], expand, ft_strlen(expand));
-		write(pipefd[1], "\n", 1);
-		free(line);
-		free(expand);
+	ft_readline(shell);
+	if (!shell->input)
+	{
+		printf("exit\n");
+		free_all(shell);
+		free_arr(str, NULL);
+		return (str = NULL, NULL);
 	}
-	close(pipefd[1]);
-	return (pipefd[0]);
+	parsing(shell, str);
+	count_pipe(shell);
+	if (!shell->cmds || !shell->cmds->argv || !shell->cmds->argv[0])
+	{
+		free_all(shell);
+		shell->input = NULL;
+	}
+	else
+	{
+		if (shell->cmds && shell->cmds->argv && shell->cmds->next)
+			pipex(shell, str);
+		else
+			str = execute(shell, shell->cmds->argv, str, NULL);
+		free_all(shell);
+		shell->input = NULL;
+	}
+	return (str);
+}
+
+char	**initialize_shell(t_shell *shell, char **envp)
+{
+	shell->tokens = NULL;
+	shell->input = NULL;
+	shell->cmds = NULL;
+	shell->pipe = 0;
+	shell->es = 0;
+	shell->i = -1;
+	start_signals();
+	print_header();
+	return (dup_env(envp));
 }
 
 int	main(int ac, char **av, char **envp)
@@ -149,39 +90,12 @@ int	main(int ac, char **av, char **envp)
 		printf("Usage: %s\n", av[0]);
 		return (1);
 	}
-	shell.tokens = NULL;
-	shell.input = NULL;
-	shell.cmds = NULL;
-	str = dup_env(envp);
-	start_signals();
-	print_header();
+	str = initialize_shell(&shell, envp);
 	while (1)
 	{
-		ft_readline(&shell);
-		if (!shell.input)
-		{
-			printf("exit\n");
-			rl_clear_history();
-    		free_all(&shell);
-    		free_arr(str, NULL);
-			str = NULL;
-    		break ;
-		}
-		parsing(&shell, str);
-		if (!shell.cmds || !shell.cmds->argv || !shell.cmds->argv[0])
-    	{
-        	free_all(&shell);
-    	    shell.input = NULL;
-    	}
-		else
-		{
-			if (shell.cmds && shell.cmds->argv && shell.cmds->next)
-				pipex(&shell, str);
-			else
-				str = execute(&shell, shell.cmds->argv, str);
-			free_all(&shell);
-			shell.input = NULL;
-		}
+		str = ft_minishell(&shell, str);
+		if (!str)
+			break ;
 	}
 	rl_clear_history();
 	free_all(&shell);

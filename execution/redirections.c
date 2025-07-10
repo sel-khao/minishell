@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   redirections.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sara <sara@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sel-khao <sel-khao@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 10:15:41 by kbossio           #+#    #+#             */
-/*   Updated: 2025/07/08 20:07:21 by sara             ###   ########.fr       */
+/*   Updated: 2025/07/10 15:42:14 by sel-khao         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,14 +46,14 @@ int	handle_redirections(t_cmd *cmd)
 		}
 		else if (redir->type == HEREDOC)
 		{
-    		fd = ft_atoi(redir->filename);
-    		if (fd <= 0)
-    		{
-    			perror("invalid heredoc fd");
-    	    	return (1);
-    		}
-    		dup2(fd, STDIN_FILENO);
-    		close(fd);
+			fd = ft_atoi(redir->filename);
+			if (fd <= 0)
+			{
+				perror("invalid heredoc fd");
+				return (1);
+			}
+			dup2(fd, STDIN_FILENO);
+			close(fd);
 		}
 		redir = redir->next;
 	}
