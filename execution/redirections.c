@@ -6,7 +6,7 @@
 /*   By: sel-khao <sel-khao@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 10:15:41 by kbossio           #+#    #+#             */
-/*   Updated: 2025/07/11 00:40:44 by sel-khao         ###   ########.fr       */
+/*   Updated: 2025/07/11 09:26:27 by sel-khao         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,50 +76,14 @@ int	handle_redirections(t_cmd *cmd)
 	return (0);
 }
 
-/* int	handle_redirections(t_cmd *cmd)
+void	close_fd(void)
 {
-	t_redir	*redir;
-	int		fd;
+	int	fd;
 
-	redir = cmd->redir;
-	while (redir)
+	fd = 3;
+	while (fd < 1024)
 	{
-		if (redir->type == OUTFILE)
-		{
-			fd = open(redir->filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-			if (fd == -1)
-				return (perror("open"), 1);
-			dup2(fd, STDOUT_FILENO);
-			close(fd);
-		}
-		else if (redir->type == APPEND)
-		{
-			fd = open(redir->filename, O_WRONLY | O_CREAT | O_APPEND, 0644);
-			if (fd == -1)
-				return (perror("open"), 1);
-			dup2(fd, STDOUT_FILENO);
-			close(fd);
-		}
-		else if (redir->type == INFILE)
-		{
-			fd = open(redir->filename, O_RDONLY);
-			if (fd == -1)
-				return (perror("open"), 1);
-			dup2(fd, STDIN_FILENO);
-			close(fd);
-		}
-		else if (redir->type == HEREDOC)
-		{
-			fd = ft_atoi(redir->filename);
-			if (fd <= 0)
-			{
-				perror("invalid heredoc fd");
-				return (1);
-			}
-			dup2(fd, STDIN_FILENO);
-			close(fd);
-		}
-		redir = redir->next;
+		close(fd);
+		fd++;
 	}
-	return (0);
-} */
+}

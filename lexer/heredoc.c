@@ -6,110 +6,94 @@
 /*   By: sel-khao <sel-khao@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 22:13:11 by sel-khao          #+#    #+#             */
-/*   Updated: 2025/07/10 21:35:34 by sel-khao         ###   ########.fr       */
+/*   Updated: 2025/07/11 19:08:39 by sel-khao         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
 
-void	check_delim(t_token **tmp, char **envp, t_cmd *cmd, int *es)
+int	init_heredoc(t_shell *shell, t_hd *hd, const char *delimiter, int *es)
 {
-	t_token	*delim;
-	char	*delimiter;
-
-	delim = (*tmp)->next;
-	if (delim)
-	{
-		delimiter = delim->value;
-		handle_heredoc(delimiter, envp, cmd, es);
-		*tmp = (*tmp)->next->next;
-	}
-}
-
-int	validate_heredoc(char **input)
-{
-	if (*input && (*input)[0] == '<' && (*input)[1] == '<')
-	{
-		*input += 2;
-		while (**input == ' ')
-			(*input)++;
-		if (**input == '\0')
-			return (1);
-		return (0);
-	}
-	return (0);
-}
-
-void	handle_heredoc(char *delimiter, char **envp, t_cmd *cmd, int *es)
-{
-	int		hdoc_fd;
-	char	*fd_str;
-
-	hdoc_fd = heredoc_pipe(delimiter, envp, es);
-	if (hdoc_fd < 0)
-	{
-		perror("heredoc pipe error");
-		exit(1);
-	}
-	fd_str = ft_itoa(hdoc_fd);
-	add_redir(&cmd->redir, fd_str, HEREDOC);
-	free(fd_str);
-}
-
-void	heredoc_sig(int sig)
-{
-	if (sig == SIGINT)
-	{
-		g_status = 130;
-		rl_done = 1;
-		rl_replace_line("", 0);
-		rl_redisplay();
-		write(1, "\n", 1);
-	}
-}
-
-int	heredoc_pipe(const char *delimiter, char **envp, int *es)
-{
-	int		pipefd[2];
-	char	*line;
-	char	*expand;
-
-	if (pipe(pipefd) == -1)
+	hd->delimiter = delimiter;
+	hd->envp = shell->envp;
+	hd->es = es;
+	if (pipe(hd->pipefd) == -1)
 	{
 		perror("pipe");
 		return (-1);
 	}
+	hd->stdin_backup = dup(STDIN_FILENO);
+	shell->status = 0;
 	signal(SIGINT, heredoc_sig);
+	return (0);
+}
+
+int	cleanup_heredoc_resources(t_hd *hd, char *line)
+{
+	close(hd->pipefd[1]);
+	close(hd->pipefd[0]);
+	if (line)
+		free(line);
+	dup2(hd->stdin_backup, STDIN_FILENO);
+	close(hd->stdin_backup);
+	signal(SIGINT, signal_handler);
+	rl_done = 0;
+	return (-1);
+}
+
+static int	finalize_heredoc_pipe(t_hd *hd)
+{
+	close(hd->pipefd[1]);
+	dup2(hd->stdin_backup, STDIN_FILENO);
+	close(hd->stdin_backup);
+	signal(SIGINT, signal_handler);
+	rl_done = 0;
+	return (hd->pipefd[0]);
+}
+
+static int	process_heredoc_line(t_shell *shell, char *line, t_hd *hd)
+{
+	char	*expand;
+
+	if (shell->status == 130 || !line)
+	{
+		if (shell->status == 130)
+			return (cleanup_heredoc_resources(hd, line));
+		free(line);
+		return (1);
+	}
+	if (ft_strcmp(line, hd->delimiter) == 0)
+	{
+		free(line);
+		return (1);
+	}
+	expand = expand_var(shell, line, hd->es);
+	if (!expand)
+		return (cleanup_heredoc_resources(hd, line));
+	write(hd->pipefd[1], expand, ft_strlen(expand));
+	write(hd->pipefd[1], "\n", 1);
+	free(line);
+	free(expand);
+	return (0);
+}
+
+int	heredoc_pipe(t_shell *shell, const char *delimiter, int *es)
+{
+	t_hd		hd;
+	char		*line;
+	int			result;
+
+	if (init_heredoc(shell, &hd, delimiter, es) == -1)
+		return (-1);
 	while (1)
 	{
 		line = readline("> ");
-		if (g_status == 130)
-		{
-			rl_done = 1;
-			close(pipefd[1]);
-			close(pipefd[0]);
-			free(line);
-			signal(SIGINT, signal_handler);
+		update_status_code(shell);
+		result = process_heredoc_line(shell, line, &hd);
+		if (result == -1)
 			return (-1);
-		}
-		if (!line || ft_strcmp(line, delimiter) == 0)
-		{
-			free(line);
+		if (result == 1)
 			break ;
-		}
-		expand = expand_var(line, envp, es);
-		if (!expand)
-		{
-			free(line);
-			close(pipefd[1]);
-			close(pipefd[0]);
-			return (-1);
-		}
-		write(pipefd[1], expand, ft_strlen(expand));
-		write(pipefd[1], "\n", 1);
-		free(line);
-		free(expand);
 	}
-	close(pipefd[1]);
-	return (pipefd[0]);
+	return (finalize_heredoc_pipe(&hd));
 }

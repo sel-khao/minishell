@@ -6,19 +6,17 @@
 /*   By: sel-khao <sel-khao@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 11:25:53 by kbossio           #+#    #+#             */
-/*   Updated: 2025/07/10 23:40:53 by sel-khao         ###   ########.fr       */
+/*   Updated: 2025/07/11 19:38:49 by sel-khao         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
-//6
-int	g_status = 0;
 
 void	signal_handler(int sig)
 {
 	if (sig == SIGINT)
 	{
-		g_status = 130;
+		g_status = SIGINT;
 		write(1, "\n", 1);
 		rl_on_new_line();
 		rl_replace_line("", 0);
@@ -26,7 +24,7 @@ void	signal_handler(int sig)
 	}
 	if (sig == SIGQUIT)
 	{
-		g_status = 131;
+		g_status = SIGQUIT;
 		rl_on_new_line();
 		rl_replace_line("", 0);
 		rl_redisplay();
@@ -108,6 +106,15 @@ int	exec_external(t_shell *shell, char **args, char **envp, t_fd *t)
 		ft_putendl_fd("bash: : command not found", STDERR_FILENO);
 		return (127);
 	}
+	fd = open(args[0], __O_DIRECTORY);
+	if (fd >= 0)
+	{
+		ft_putstr_fd("bash: ", STDERR_FILENO);
+		ft_putstr_fd(args[0], STDERR_FILENO);
+		ft_putendl_fd(": is a directory", STDERR_FILENO);
+		close(fd);
+		return (126);
+	}
 	exe_path = find_executable(args[0], envp);
 	if (!exe_path)
 	{
@@ -126,19 +133,6 @@ int	exec_external(t_shell *shell, char **args, char **envp, t_fd *t)
 		free(exe_path);
 		return (127);
 	}
-	if (ft_strchr(args[0], '/'))
-	{
-		fd = open(args[0], __O_DIRECTORY);
-		if (fd > 0)
-		{
-			ft_putstr_fd("bash: ", STDERR_FILENO);
-			ft_putstr_fd(args[0], STDERR_FILENO);
-			ft_putendl_fd(": is a directory", STDERR_FILENO);
-			close(fd);
-		}
-		free(exe_path);
-		return (126);
-	}
 	if (shell->pipe == 0)
 	{
 		pid = fork();
@@ -146,11 +140,12 @@ int	exec_external(t_shell *shell, char **args, char **envp, t_fd *t)
 			return (perror("fork"), free(exe_path), 1);
 		if (pid == 0)
 		{
-			signal(SIGQUIT, signal_handler);
-			execve(exe_path, args, envp);
-			perror("execve");
+			signal(SIGQUIT, SIG_DFL);
+			signal(SIGINT, SIG_DFL);
 			close(t->input);
 			close(t->output);
+			execve(exe_path, args, envp);
+			perror("execve");
 			free_all(shell);
 			exit(1);
 		}
@@ -162,14 +157,14 @@ int	exec_external(t_shell *shell, char **args, char **envp, t_fd *t)
 				;
 			signal(SIGINT, signal_handler);
 			if (WIFEXITED(status))
-				g_status = WEXITSTATUS(status);
+				shell->status = WEXITSTATUS(status);
 			else if (WIFSIGNALED(status))
 			{
 				if (WTERMSIG(status) == SIGINT)
 					write(1, "\n", 1);
 				else if (WTERMSIG(status) == SIGQUIT)
 					write(1, "Quit (core dumped)\n", 19);
-				g_status = 128 + WTERMSIG(status);
+				shell->status = 128 + WTERMSIG(status);
 			}
 		}
 	}

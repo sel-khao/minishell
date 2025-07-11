@@ -1,15 +1,17 @@
 NAME = minishell
 
-CC = cc -Wall -Wextra -Werror
+CC = cc -Wall -Wextra -Werror -g
 
 INCLUDES = -Iinclude -Ilibft
 
 LIBFT_DIR = libft
 LIBFT = $(LIBFT_DIR)/libft.a
 
-FILES = lexer/helper.c lexer/heredoc.c lexer/quotes.c lexer/tokens.c lexer/token.c lexer/main.c lexer/free.c lexer/process.c lexer/utils.c lexer/validate.c lexer/expand.c \
-	execution/execute.c execution/utils.c execution/export.c execution/unset.c execution/redirections.c \
-	execution/pipes.c execution/exit.c execution/buildin.c execution/env_order.c execution/signals.c execution/ins_exp.c
+FILES = lexer/helper.c lexer/hd_utils.c lexer/heredoc.c lexer/quotes.c lexer/tokens.c lexer/token.c \
+		lexer/main.c lexer/free.c lexer/process.c lexer/utils.c lexer/validate.c lexer/expand.c \
+		execution/execute.c execution/utils.c execution/export.c execution/unset.c execution/redirections.c \
+		execution/pipes.c execution/exit.c execution/buildin.c execution/env_order.c execution/signals.c \
+		execution/ins_exp.c lexer/update_status_code.c lexer/is_special_special.c \
 
 OBJS = ${FILES:.c=.o}
 
